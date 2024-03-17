@@ -99,9 +99,7 @@ class UpdateGeonames extends AbstractCommand {
         parent::__construct();
         $this->curl   = $curl;
         $this->client = $client;
-
     }
-
 
     /**
      * @return bool

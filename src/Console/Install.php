@@ -4,6 +4,7 @@ namespace SequelONE\Geonames\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use SequelONE\Geonames\Models\GeoSetting;
 use SequelONE\Geonames\Models\Log;
 
@@ -15,9 +16,9 @@ class Install extends Command {
      * @var string The name and signature of the console command.
      */
     protected $signature = 'geonames:install
-        {--connection= : If you want to specify the name of the database connection you want used.} 
-        {--country=* : Add the 2 digit code for each country. One per option.}      
-        {--language=* : Add the 2 character language code.} 
+        {--connection= : If you want to specify the name of the database connection you want used.}
+        {--country=* : Add the 2 digit code for each country. One per option.}
+        {--language=* : Add the 2 character language code.}
         {--storage=geonames : The name of the directory, rooted in the storage_dir() path, where we store all downloaded files.}
         {--test : Call this boolean switch if you want to install just enough records to test the system. Makes it fast.}';
 

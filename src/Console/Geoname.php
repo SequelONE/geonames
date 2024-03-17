@@ -2,6 +2,8 @@
 
 namespace SequelONE\Geonames\Console;
 
+use Illuminate\Support\Facades\Config;
+
 class Geoname extends AbstractCommand {
 
     use GeonamesConsoleTrait;

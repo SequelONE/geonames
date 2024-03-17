@@ -5,6 +5,7 @@ namespace SequelONE\Geonames\Console;
 use Curl\Curl;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use SequelONE\Geonames\Models\GeoSetting;
@@ -41,6 +42,11 @@ trait GeonamesConsoleTrait {
      */
     protected $runTime;
 
+    protected $tablePrefix;
+
+    public function __construct() {
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
+    }
 
     /**
      * Start the timer. Record the start time in startTime()
@@ -337,7 +343,7 @@ trait GeonamesConsoleTrait {
         $driver = $this->getDriver();
         switch ( $driver ):
             case 'mysql':
-                $statement = 'CREATE TABLE ' . $workingTableName . ' LIKE ' . $tableName . ';';
+                $statement = 'CREATE TABLE ' . $this->tablePrefix . $workingTableName . ' LIKE ' . $this->tablePrefix . $tableName . ';';
                 break;
 
             case 'sqlite':
@@ -347,8 +353,8 @@ trait GeonamesConsoleTrait {
                                            ->where( 'type', 'table' )
                                            ->where( 'name', $tableName )
                                            ->first()->sql;
-                $search                = 'CREATE TABLE "' . $tableName . '"';
-                $replace               = 'CREATE TABLE "' . $workingTableName . '"';
+                $search                = 'CREATE TABLE "' . $this->tablePrefix . $tableName . '"';
+                $replace               = 'CREATE TABLE "' . $this->tablePrefix . $workingTableName . '"';
                 $statement             = str_replace( $search, $replace, $statementToBeModified );
                 break;
 

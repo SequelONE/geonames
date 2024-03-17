@@ -3,6 +3,7 @@
 namespace SequelONE\Geonames\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use SequelONE\Geonames\Models\BaseTrait;
 use SequelONE\Geonames\Models\GeoSetting;
 use Illuminate\Support\Facades\Schema;
@@ -23,6 +24,8 @@ class Test extends Command {
      */
     protected $description = "A testing ground for new functions.";
 
+    protected $tablePrefix;
+
     /**
      * The name of our alternate names table in our database. Using constants here, so I don't need
      * to worry about typos in my code. My IDE will warn me if I'm sloppy.
@@ -40,8 +43,7 @@ class Test extends Command {
      */
     public function __construct() {
         parent::__construct();
-
-
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
 
@@ -96,15 +98,15 @@ class Test extends Command {
 
             $query = "LOAD DATA LOCAL INFILE '" . $filePath . "'
     INTO TABLE " . self::TABLE_WORKING . " CHARACTER SET '{$charset}'
-        (   alternateNameId, 
+        (   alternateNameId,
             geonameid,
-            isolanguage, 
-            alternate_name, 
-            isPreferredName, 
-            isShortName, 
-            isColloquial, 
-            isHistoric,              
-            @created_at, 
+            isolanguage,
+            alternate_name,
+            isPreferredName,
+            isShortName,
+            isColloquial,
+            isHistoric,
+            @created_at,
             @updated_at)
     SET created_at=NOW(),updated_at=null";
 

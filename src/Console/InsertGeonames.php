@@ -4,6 +4,7 @@ namespace SequelONE\Geonames\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use SequelONE\Geonames\Models\GeoSetting;
@@ -56,6 +57,7 @@ class InsertGeonames extends AbstractCommand {
      */
     protected $numLinesInMasterFile;
 
+    protected $tablePrefix;
 
     /**
      *
@@ -82,6 +84,7 @@ class InsertGeonames extends AbstractCommand {
      */
     public function __construct() {
         parent::__construct();
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
 

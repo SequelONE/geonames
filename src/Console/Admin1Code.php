@@ -4,6 +4,7 @@ namespace SequelONE\Geonames\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use SequelONE\Geonames\Models\GeoSetting;
@@ -35,6 +36,7 @@ class Admin1Code extends AbstractCommand {
      */
     const REMOTE_FILE_NAME = 'admin1CodesASCII.txt';
 
+    protected $tablePrefix;
 
     /**
      * The name of our alternate names table in our database. Using constants here, so I don't need
@@ -53,6 +55,7 @@ class Admin1Code extends AbstractCommand {
      */
     public function __construct() {
         parent::__construct();
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
 
@@ -181,7 +184,7 @@ class Admin1Code extends AbstractCommand {
             admin1_code,
             name,
             asciiname,
-            @created_at, 
+            @created_at,
             @updated_at)
     SET created_at=NOW(),updated_at=null";
 

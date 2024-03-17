@@ -4,6 +4,7 @@ namespace SequelONE\Geonames\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -34,6 +35,8 @@ class PostalCode extends AbstractCommand {
      */
     protected static $postalCodeUrl = 'http://download.geonames.org/export/zip/';
 
+    protected $tablePrefix;
+
     /**
      *
      */
@@ -60,6 +63,7 @@ class PostalCode extends AbstractCommand {
      */
     public function __construct() {
         parent::__construct();
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
 

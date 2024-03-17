@@ -4,6 +4,7 @@ namespace SequelONE\Geonames\Console;
 
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use SequelONE\Geonames\Models\GeoSetting;
 use SequelONE\Geonames\Models\Log;
 

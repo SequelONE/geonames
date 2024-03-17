@@ -3,6 +3,7 @@
 namespace SequelONE\Geonames\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use SequelONE\Geonames\Models\GeoSetting;
 use SequelONE\Geonames\Models\Log;
@@ -23,11 +24,14 @@ class FeatureClass extends AbstractCommand {
      */
     protected $description = "Populate the FeatureClasses table.";
 
+    protected $tablePrefix;
+
     /**
      * Initialize constructor.
      */
     public function __construct () {
         parent::__construct();
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
 

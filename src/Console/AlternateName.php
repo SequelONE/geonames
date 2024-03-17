@@ -5,6 +5,7 @@ namespace SequelONE\Geonames\Console;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use SequelONE\Geonames\Models\GeoSetting;
@@ -26,7 +27,7 @@ class AlternateName extends AbstractCommand {
     /**
      * @var string The name and signature of the console command.
      */
-    protected $signature = 'geonames:alternate-name 
+    protected $signature = 'geonames:alternate-name
         {--connection= : If you want to specify the name of the database connection you want used.}
         {--test : If you want to test the command on a small countries data set.}
         {--country=* : Add the 2 character code for each country. Add additional countries with additional "--country=" options on the command line.}    ';
@@ -46,6 +47,7 @@ class AlternateName extends AbstractCommand {
      */
     const LOCAL_ALTERNATE_NAMES_FILE_NAME_FOR_ALL = 'alternateNames.txt';
 
+    protected $tablePrefix;
 
     /**
      * The name of our alternate names table in our database. Using constants here, so I don't need
@@ -64,6 +66,7 @@ class AlternateName extends AbstractCommand {
      */
     public function __construct() {
         parent::__construct();
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
 
@@ -211,11 +214,11 @@ class AlternateName extends AbstractCommand {
 //        Schema::connection( $this->connectionName )->dropIfExists( self::TABLE_WORKING );
 //        DB::connection( $this->connectionName )
 //          ->statement( 'CREATE TABLE ' . self::TABLE_WORKING . ' LIKE ' . self::TABLE . ';' );
-        $this->disableKeys( self::TABLE_WORKING );
+        $this->disableKeys( $this->tablePrefix. self::TABLE_WORKING );
     }
 
     protected function finalizeTable() {
-        $this->enableKeys( self::TABLE_WORKING );
+        $this->enableKeys( $this->tablePrefix. self::TABLE_WORKING );
         Schema::connection( $this->connectionName )->dropIfExists( self::TABLE );
         Schema::connection( $this->connectionName )->rename( self::TABLE_WORKING, self::TABLE );
     }
@@ -244,18 +247,18 @@ class AlternateName extends AbstractCommand {
             $localFileSplitPath = $this->fixDirectorySeparatorForWindows( $localFileSplitPath );
 
             $query = "LOAD DATA LOCAL INFILE '" . $localFileSplitPath . "'
-            
-                        INTO TABLE " . self::TABLE_WORKING . " CHARACTER SET '{$charset}'
-                            (   alternateNameId, 
+
+                        INTO TABLE " . $this->tablePrefix . self::TABLE_WORKING . " CHARACTER SET '{$charset}'
+                            (   alternateNameId,
                                 geonameid,
-                                isolanguage, 
-                                alternate_name, 
-                                isPreferredName, 
-                                isShortName, 
-                                isColloquial, 
-                                isHistoric,              
-                                @created_at, 
-                                @updated_at)                            
+                                isolanguage,
+                                alternate_name,
+                                isPreferredName,
+                                isShortName,
+                                isColloquial,
+                                isHistoric,
+                                @created_at,
+                                @updated_at)
                         SET created_at=NOW(),updated_at=null
                         ";
 
@@ -347,18 +350,18 @@ class AlternateName extends AbstractCommand {
         $charset = config( "database.connections.{$this->connectionName}.charset", 'utf8mb4' );
 
         $query = "LOAD DATA LOCAL INFILE '" . $pathToRecreatedFile . "'
-            
-                        INTO TABLE " . self::TABLE_WORKING . " CHARACTER SET '{$charset}'
-                            (   alternateNameId, 
+
+                        INTO TABLE " . $this->tablePrefix . self::TABLE_WORKING . " CHARACTER SET '{$charset}'
+                            (   alternateNameId,
                                 geonameid,
-                                isolanguage, 
-                                alternate_name, 
-                                isPreferredName, 
-                                isShortName, 
-                                isColloquial, 
-                                isHistoric,              
-                                @created_at, 
-                                @updated_at)                            
+                                isolanguage,
+                                alternate_name,
+                                isPreferredName,
+                                isShortName,
+                                isColloquial,
+                                isHistoric,
+                                @created_at,
+                                @updated_at)
                         SET created_at=NOW(),updated_at=null
                         ";
 
@@ -405,7 +408,7 @@ class AlternateName extends AbstractCommand {
         //DB::enableQueryLog();
         $numLines = LocalFile::lineCount( $localFilePath );
 
-        $this->disableKeys( self::TABLE );
+        $this->disableKeys( $this->tablePrefix . self::TABLE );
 
         try {
             $this->comment( "Splitting " . $localFilePath );
@@ -468,7 +471,7 @@ class AlternateName extends AbstractCommand {
             $geonamesBar->finish();
         endforeach;
 
-        $this->enableKeys( self::TABLE );
+        $this->enableKeys( $this->tablePrefix . self::TABLE );
 
         return $totalRowsInserted;
     }
@@ -485,7 +488,7 @@ class AlternateName extends AbstractCommand {
     protected function insertAlternateNamesWithEloquentMassInsert( $localFilePath ): int {
         $numLines = LocalFile::lineCount( $localFilePath );
 
-        $this->disableKeys( self::TABLE );
+        $this->disableKeys( $this->tablePrefix . self::TABLE );
 
         try {
             $this->comment( "Splitting " . $localFilePath );

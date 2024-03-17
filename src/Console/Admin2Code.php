@@ -5,6 +5,7 @@ namespace SequelONE\Geonames\Console;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 use SequelONE\Geonames\Models\GeoSetting;
 use SequelONE\Geonames\Models\Log;
 use SequelONE\Geonames\Models\Admin2Code as Admin2CodeModel;
@@ -36,6 +37,7 @@ class Admin2Code extends AbstractCommand {
      */
     const REMOTE_FILE_NAME = 'admin2Codes.txt';
 
+    protected $tablePrefix;
 
     /**
      * The name of our alternate names table in our database. Using constants here, so I don't need
@@ -55,6 +57,7 @@ class Admin2Code extends AbstractCommand {
      */
     public function __construct() {
         parent::__construct();
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
 
@@ -127,7 +130,7 @@ class Admin2Code extends AbstractCommand {
     protected function insertWithEloquent( string $localFilePath ) {
         $numLines = LocalFile::lineCount( $localFilePath );
 
-        $this->disableKeys( self::TABLE );
+        $this->disableKeys( $this->tablePrefix . self::TABLE );
         $rows = file( $localFilePath );
 
         if ( $this->option( 'test' ) ):
@@ -161,6 +164,6 @@ class Admin2Code extends AbstractCommand {
 
             $geonamesBar->advance();
         }
-        $this->enableKeys( self::TABLE );
+        $this->enableKeys( $this->tablePrefix . self::TABLE );
     }
 }

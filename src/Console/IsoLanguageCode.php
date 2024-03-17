@@ -5,6 +5,7 @@ namespace SequelONE\Geonames\Console;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Config;
 use SequelONE\Geonames\Models\GeoSetting;
 use SequelONE\Geonames\Models\Log;
 
@@ -34,6 +35,7 @@ class IsoLanguageCode extends AbstractCommand {
      */
     const LANGUAGE_CODES_FILE_NAME = 'iso-languagecodes.txt';
 
+    protected $tablePrefix;
 
     /**
      *
@@ -51,6 +53,7 @@ class IsoLanguageCode extends AbstractCommand {
      */
     public function __construct() {
         parent::__construct();
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
 
@@ -122,8 +125,8 @@ class IsoLanguageCode extends AbstractCommand {
         ini_set( 'memory_limit', -1 );
         $this->line( "Inserting via LOAD DATA INFILE: " . $localFilePath );
 
-        $this->makeWorkingTable( self::TABLE, self::TABLE_WORKING );
-        $this->disableKeys( self::TABLE_WORKING );
+        $this->makeWorkingTable(self::TABLE, self::TABLE_WORKING);
+        $this->disableKeys( $this->tablePrefix . self::TABLE_WORKING );
 
         // This file includes a header row. That is why I skip the first line with the IGNORE 1 LINES statement.
 
@@ -133,12 +136,12 @@ class IsoLanguageCode extends AbstractCommand {
         $charset = config( "database.connections.{$this->connectionName}.charset", 'utf8mb4' );
 
         $query = "LOAD DATA LOCAL INFILE '" . $localFilePath . "'
-    INTO TABLE " . self::TABLE_WORKING . " CHARACTER SET '{$charset}' IGNORE 1 LINES
-        (   iso_639_3, 
+    INTO TABLE " . $this->tablePrefix . self::TABLE_WORKING . " CHARACTER SET '{$charset}' IGNORE 1 LINES
+        (   iso_639_3,
             iso_639_2,
-            iso_639_1, 
-            language_name,          
-            @created_at, 
+            iso_639_1,
+            language_name,
+            @created_at,
             @updated_at)
     SET created_at=NOW(),updated_at=null";
 
@@ -151,9 +154,14 @@ class IsoLanguageCode extends AbstractCommand {
                                                                                                ->errorInfo(), TRUE ) );
         }
 
-        $this->enableKeys( self::TABLE_WORKING );
-        Schema::connection( $this->connectionName )->dropIfExists( self::TABLE );
-        Schema::connection( $this->connectionName )->rename( self::TABLE_WORKING, self::TABLE );
+        $this->enableKeys( $this->tablePrefix . self::TABLE_WORKING );
+        if (Schema::connection($this->connectionName)->hasTable(self::TABLE)) {
+            Schema::connection($this->connectionName)->dropIfExists(self::TABLE);
+        }
+
+        if (Schema::connection($this->connectionName)->hasTable(self::TABLE_WORKING)) {
+            Schema::connection($this->connectionName)->rename(self::TABLE_WORKING, self::TABLE);
+        }
     }
 
 
@@ -218,8 +226,8 @@ class IsoLanguageCode extends AbstractCommand {
         ini_set( 'memory_limit', -1 );
         $this->line( "Inserting via Eloquent: " . $localFilePath );
 
-        $this->makeWorkingTable( self::TABLE, self::TABLE_WORKING );
-        $this->disableKeys( self::TABLE_WORKING );
+        $this->makeWorkingTable(self::TABLE, self::TABLE_WORKING);
+        $this->disableKeys( $this->tablePrefix . self::TABLE_WORKING );
 
         $rows = [];
         $file = fopen( $localFilePath, 'r' );
@@ -250,10 +258,14 @@ class IsoLanguageCode extends AbstractCommand {
             }
         }
 
+        $this->enableKeys( $this->tablePrefix . self::TABLE_WORKING );
+        if (Schema::connection($this->connectionName)->hasTable(self::TABLE)) {
+            Schema::connection($this->connectionName)->dropIfExists(self::TABLE);
+        }
 
-        $this->enableKeys( self::TABLE_WORKING );
-        Schema::connection( $this->connectionName )->dropIfExists( self::TABLE );
-        Schema::connection( $this->connectionName )->rename( self::TABLE_WORKING, self::TABLE );
+        if (Schema::connection($this->connectionName)->hasTable(self::TABLE_WORKING)) {
+            Schema::connection($this->connectionName)->rename(self::TABLE_WORKING, self::TABLE);
+        }
     }
 
     /**

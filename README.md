@@ -26,6 +26,67 @@ After that, Run migrate command:
 ```
 php artisan migrate
 ```
+## Settings
+Add in .env
+
+```
+DB_PREFIX=
+```
+
+Add or edit in database driver `config/database.php`:
+```
+'prefix' => env('DB_PREFIX', ''),
+```
+
+and
+
+```
+'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO::MYSQL_ATTR_LOCAL_INFILE => true,
+            ]) : [],
+```
+
+Do not forget to include local_infile in MySQL:
+
+```
+SHOW GLOBAL VARIABLES LIKE 'local_infile';
+SET GLOBAL local_infile = 'ON';
+SHOW GLOBAL VARIABLES LIKE 'local_infile';
+```
+
+It should echo the following:
+
+```
+mysql> SHOW GLOBAL VARIABLES LIKE 'local_infile';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| local_infile  | OFF   |
++---------------+-------+
+1 row in set (0.00 sec)
+
+mysql> SET GLOBAL local_infile = 'ON';
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> SHOW GLOBAL VARIABLES LIKE 'local_infile';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| local_infile  | ON    |
++---------------+-------+
+1 row in set (0.00 sec)
+
+mysql>
+```
+
+or if setting this in my.cnf:
+```
+[mysqld]
+local_infile=ON
+```
+
+https://dba.stackexchange.com/questions/48751/enabling-load-data-local-infile-in-mysql
 
 Want to install all of the geonames records for the US, Canada, and Mexico as well as pull in the feature codes 
 definitions file in English? 

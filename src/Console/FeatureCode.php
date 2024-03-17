@@ -5,6 +5,7 @@ namespace SequelONE\Geonames\Console;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Config;
 use SequelONE\Geonames\Models\GeoSetting;
 use SequelONE\Geonames\Models\Log;
 
@@ -30,6 +31,7 @@ class FeatureCode extends AbstractCommand {
      */
     protected $description = "Download and insert the feature code files from geonames. Every language. They're only ~600 rows each.";
 
+    protected $tablePrefix;
 
     /**
      * The name of our feature codes table in our database. Using constants here, so I don't need
@@ -42,13 +44,12 @@ class FeatureCode extends AbstractCommand {
      */
     const TABLE_WORKING = 'geonames_feature_codes_working';
 
-
-
     /**
      * Create a new command instance.
      */
     public function __construct() {
         parent::__construct();
+        $this->tablePrefix = Config::get('database.connections.mysql.prefix', '');
     }
 
     /**
@@ -99,7 +100,7 @@ class FeatureCode extends AbstractCommand {
             $localPathsToFeatureCodeFiles = self::downloadFiles( $this, $featureCodeFileDownloadLinks,
                                                                  $this->connectionName );
 
-            $this->makeWorkingTable( self::TABLE, self::TABLE_WORKING );
+            $this->makeWorkingTable(self::TABLE, self::TABLE_WORKING);
         } catch ( \Exception $exception ) {
             Log::error( '', $exception->getMessage(), 'general',
                         $this->connectionName );
@@ -127,11 +128,17 @@ class FeatureCode extends AbstractCommand {
         }
 
         if ( $allRowsInserted === TRUE ) {
-            Schema::connection( $this->connectionName )->drop( self::TABLE );
-            Schema::connection( $this->connectionName )->rename( self::TABLE_WORKING, self::TABLE );
-            $this->info( self::TABLE . " table was truncated and refilled in " . $this->getRunTime() . " seconds." );
+            if (Schema::connection($this->connectionName)->hasTable(self::TABLE)) {
+                Schema::connection($this->connectionName)->dropIfExists(self::TABLE);
+            }
+
+            if (Schema::connection($this->connectionName)->hasTable(self::TABLE_WORKING)) {
+                Schema::connection($this->connectionName)->rename(self::TABLE_WORKING, self::TABLE);
+            }
+
+            $this->info( $this->tablePrefix . self::TABLE . " table was truncated and refilled in " . $this->getRunTime() . " seconds." );
         } else {
-            Log::error( '', "Failed to insert all of the " . self::TABLE . " rows.", 'database',
+            Log::error( '', "Failed to insert all of the " . $this->tablePrefix . self::TABLE . " rows.", 'database',
                         $this->connectionName );
             throw $exception;
         }
@@ -275,7 +282,7 @@ class FeatureCode extends AbstractCommand {
         $numRowsNotInserted  = 0;
         $numRowsToBeInserted = count( $validRows );
 
-        $this->disableKeys( self::TABLE_WORKING );
+        $this->disableKeys( $this->tablePrefix . self::TABLE_WORKING );
 
         // Progress bar for console display.
         $bar = $this->output->createProgressBar( $numRowsToBeInserted );
@@ -298,7 +305,7 @@ class FeatureCode extends AbstractCommand {
             $bar->advance();
         }
 
-        $this->enableKeys( self::TABLE_WORKING );
+        $this->enableKeys( $this->tablePrefix . self::TABLE_WORKING );
 
         if ( $numRowsInserted != $numRowsToBeInserted ) {
             return FALSE;
