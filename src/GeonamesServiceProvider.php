@@ -39,6 +39,8 @@ class GeonamesServiceProvider extends \Illuminate\Support\ServiceProvider {
 
                                Console\PostalCode::class,
 
+                               Console\GeoIp::class,
+
                                Console\UpdateGeonames::class,
                                Console\Status::class,
                                Console\Test::class ] );
