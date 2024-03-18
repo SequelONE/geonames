@@ -71,7 +71,6 @@ class FeatureCode extends AbstractCommand {
             throw $exception;
         }
 
-
         try {
             if ( empty( $this->option( 'language' ) ) ):
                 $languages = GeoSetting::DEFAULT_LANGUAGES;
@@ -88,7 +87,6 @@ class FeatureCode extends AbstractCommand {
             $this->stopTimer();
             throw $exception;
         }
-
 
         try {
             // Get all of the feature code lines from the geonames.org download page, or an array that you specify.

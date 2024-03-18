@@ -98,7 +98,7 @@ class PostalCode extends AbstractCommand {
 
 
         try {
-            $localZipFile = $this->downloadFile( $this, $downloadLink, $this->connectionName );
+            $localZipFile = self::downloadFile( $this, $downloadLink, $this->connectionName );
         } catch ( \Exception $e ) {
             $this->error( $e->getMessage() );
             Log::error( $downloadLink, $e->getMessage(), 'remote', $this->connectionName );
@@ -109,7 +109,7 @@ class PostalCode extends AbstractCommand {
 
         try {
             $this->line( "Unzipping " . $localZipFile );
-            $this->unzip( $localZipFile, $this->connectionName );
+            self::unzip( $localZipFile, $this->connectionName );
         } catch ( \Exception $e ) {
             $this->error( $e->getMessage() );
             Log::error( $localZipFile, $e->getMessage(), 'local', $this->connectionName );
@@ -152,16 +152,18 @@ class PostalCode extends AbstractCommand {
      * @throws Exception
      */
     protected function insertWithLoadDataInfile( $localFilePath ) {
-        Schema::connection( $this->connectionName )->dropIfExists( self::TABLE_WORKING );
+        if (Schema::connection($this->connectionName)->hasTable(self::TABLE_WORKING)) {
+            Schema::connection($this->connectionName)->dropIfExists(self::TABLE_WORKING);
+        }
         DB::connection( $this->connectionName )
-            ->statement( 'CREATE TABLE ' . self::TABLE_WORKING . ' LIKE ' . self::TABLE . ';' );
+            ->statement( 'CREATE TABLE ' . $this->tablePrefix . self::TABLE_WORKING . ' LIKE ' . $this->tablePrefix . self::TABLE . ';' );
 
         $this->line( "\nAttempting Load Data Infile on " . $localFilePath );
 
         $charset = config( "database.connections.{$this->connectionName}.charset", 'utf8mb4' );
 
         $query = "LOAD DATA LOCAL INFILE '" . $localFilePath . "'
-    INTO TABLE " . self::TABLE_WORKING . " CHARACTER SET '{$charset}'
+    INTO TABLE " . $this->tablePrefix . self::TABLE_WORKING . " CHARACTER SET '{$charset}'
         (country_code,
              postal_code,
              place_name,
@@ -188,7 +190,12 @@ SET created_at=NOW(),updated_at=null";
                                                                                              TRUE ) );
         }
 
-        Schema::connection( $this->connectionName )->dropIfExists( self::TABLE );
-        Schema::connection( $this->connectionName )->rename( self::TABLE_WORKING, self::TABLE );
+        if (Schema::connection($this->connectionName)->hasTable(self::TABLE)) {
+            Schema::connection($this->connectionName)->dropIfExists(self::TABLE);
+        }
+
+        if (Schema::connection($this->connectionName)->hasTable(self::TABLE_WORKING)) {
+            Schema::connection($this->connectionName)->rename(self::TABLE_WORKING, self::TABLE);
+        }
     }
 }
